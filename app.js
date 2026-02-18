@@ -1,6 +1,6 @@
 // 1. Firebase Konfiguracija
 const firebaseConfig = {
-  apiKey: "AIzaSyAhbs7iyEYNfezLGFH-piLwEki5cta5Zwg",
+  apiKey: "",
   authDomain: "gym-app-32592.firebaseapp.com",
   projectId: "gym-app-32592",
   storageBucket: "gym-app-32592.firebasestorage.app",
