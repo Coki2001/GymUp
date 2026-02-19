@@ -1694,7 +1694,7 @@ function initPaddle() {
     }
     Paddle.Environment.set("production"); 
     Paddle.Initialize({
-        token: "live_c40d588397a9d1cd596ac914233", 
+        token: "live_a256329d857f5e51471f3cd26e3", 
         eventCallback: function(event) {
             if (event.name === "checkout.completed") {
                 onPlacanjeUspjesno(event.data);
