@@ -1692,7 +1692,7 @@ function initPaddle() {
         setTimeout(initPaddle, 500);
         return;
     }
-    Paddle.Environment.set("sandbox"); 
+    Paddle.Environment.set("production"); 
     Paddle.Initialize({
         token: "live_c40d588397a9d1cd596ac914233", 
         eventCallback: function(event) {
