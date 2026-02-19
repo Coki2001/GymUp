@@ -1,5 +1,5 @@
 const firebaseConfig = {
-  apiKey: "AIzaSyCWU-383F6Xv_LOISARyhd0fGc_uAW_VRU",
+  apiKey: "AIzaSyAHlhE4eU8J30RhB7tPy3GLIHWxUOtFrcY",
   authDomain: "gym-app-32592.firebaseapp.com",
   projectId: "gym-app-32592",
   storageBucket: "gym-app-32592.firebasestorage.app",
