@@ -1,6 +1,5 @@
-// 1. Firebase Konfiguracija
 const firebaseConfig = {
-  apiKey: "AIzaSyCWU-383F6Xv_LOISARyhd0fGc_uAW_VRU",
+  apiKey: "pdl_live_apikey_01khvsan9q3qegqedha9c6hd9t_c703QYeSnf4DqS4qq3YBJR_A4L",
   authDomain: "gym-app-32592.firebaseapp.com",
   projectId: "gym-app-32592",
   storageBucket: "gym-app-32592.firebasestorage.app",
@@ -9,19 +8,16 @@ const firebaseConfig = {
   measurementId: "G-80M97K766K"
 };
 
-// 2. Inicijalizacija
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 3. Globalne varijable
 let countdown;
 let sessionStartTime;
 let sessionInterval;
 let checkCount = 0;
-let deleteTargetIndex = null; // Za brisanje istorije
+let deleteTargetIndex = null; 
 
-// --- OSNOVNE FUNKCIJE NAVIGACIJE ---
 
 function kreni() {
     document.getElementById('welcome-screen').classList.add('hide-welcome');
@@ -75,7 +71,6 @@ window.onload = function() {
     ucitajDanasniPlan();
 };
 
-// --- TAJMER I UNOS VEŽBI ---
 
 function startSessionTimer() {
     if(sessionInterval) return;
@@ -104,7 +99,6 @@ function dodajTrening() {
 
     let arhiva = JSON.parse(localStorage.getItem('gymUpData')) || [];
     
-    // Kreiraj novu vežbu
     const novaVezba = { 
         kategorija, 
         ime, 
@@ -123,7 +117,6 @@ function dodajTrening() {
     
     localStorage.setItem('gymUpData', JSON.stringify(arhiva));
     
-    // Reset polja
     document.getElementById('exName').value = "";
     document.getElementById('exSets').value = "";
     document.getElementById('exReps').value = "";
@@ -133,26 +126,22 @@ function dodajTrening() {
     azurirajHomeStats();
     prikaziObavestenje("Vežba dodata! 💪", "✅");
     
-    // Proveri da li je novi lični rekord
     proveriLicniRekord(ime, weight);
 }
 
-// Nova funkcija za proveru ličnih rekorda
 function proveriLicniRekord(nazivVezbe, novaKilaza) {
     const istorija = JSON.parse(localStorage.getItem('gymHistory')) || [];
     let maxKilaza = parseFloat(novaKilaza) || 0;
     
-    // Pronađi maksimalnu kilaže za ovu vežbu u istoriji
     istorija.forEach(sesija => {
         sesija.vezbe.forEach(v => {
             const naziv = v.naziv || v.ime || "";
             if (naziv.toLowerCase() === nazivVezbe.toLowerCase()) {
-                // Proveri setWeights
+
                 if (v.setWeights && Array.isArray(v.setWeights)) {
                     const maxUVezbi = Math.max(...v.setWeights);
                     if (maxUVezbi > maxKilaza) maxKilaza = maxUVezbi;
                 }
-                // Proveri weight (stari format)
                 if (v.weight && parseFloat(v.weight) > maxKilaza) {
                     maxKilaza = parseFloat(v.weight);
                 }
@@ -160,13 +149,11 @@ function proveriLicniRekord(nazivVezbe, novaKilaza) {
         });
     });
     
-    // Ako je nova kilaža veća, to je lični rekord!
     if (parseFloat(novaKilaza) > maxKilaza && parseFloat(novaKilaza) > 0) {
         prikaziObavestenje(`🏆 NOVI LIČNI REKORD! ${nazivVezbe}: ${novaKilaza}kg`, "🎉");
     }
 }
 
-// --- PRIKAZ VEŽBI (REŠAVA UNDEFINED) ---
 
 function prikaziVezbe() {
     const display = document.getElementById('workout-display');
@@ -187,7 +174,6 @@ function prikaziVezbe() {
         const napomena = v.opis || "";
         const odmor = v.odmor || 60;
 
-        // Inicijalizuj progress i weights za svaki set
         if (!v.setProgress) {
             v.setProgress = Array(brSerija).fill(false);
         }
@@ -200,7 +186,6 @@ function prikaziVezbe() {
         div.className = 'exercise-card';
         div.style.cssText = 'margin-bottom: 20px;';
         
-        // Header vežbe
         let html = `
             <div style="background: rgba(255,255,255,0.05); padding: 18px; border-radius: 15px; border-left: 5px solid #d4af37; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                 <div style="margin-bottom: 12px;">
@@ -212,7 +197,6 @@ function prikaziVezbe() {
                 <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
         `;
 
-        // Generisanje reda za svaku seriju
         for (let i = 0; i < brSerija; i++) {
             const isChecked = v.setProgress[i];
             const currentWeight = v.setWeights[i] || 0;
@@ -269,42 +253,34 @@ function prikaziVezbe() {
         display.appendChild(div);
     });
 
-    // Sačuvaj promene
     localStorage.setItem('gymUpData', JSON.stringify(vezbe));
 }
 
-// Nova funkcija za ažuriranje kilaže
 function updateSetWeight(exerciseIndex, setIndex, weight) {
     const vezbe = JSON.parse(localStorage.getItem('gymUpData')) || [];
     
     if (!vezbe[exerciseIndex]) return;
     
-    // Inicijalizuj setWeights ako ne postoji
     if (!vezbe[exerciseIndex].setWeights) {
         const brSerija = parseInt(vezbe[exerciseIndex].serije || vezbe[exerciseIndex].exSets || 0);
         vezbe[exerciseIndex].setWeights = Array(brSerija).fill(0);
     }
     
-    // Postavi novu kilaže
     const novaKilaza = parseFloat(weight) || 0;
     vezbe[exerciseIndex].setWeights[setIndex] = novaKilaza;
     
-    // Sačuvaj
     localStorage.setItem('gymUpData', JSON.stringify(vezbe));
     
-    // Proveri da li je novi PR
     if (novaKilaza > 0) {
         const nazivVezbe = vezbe[exerciseIndex].naziv || vezbe[exerciseIndex].ime || "Vežba";
         proveriLicniRekordZaSet(nazivVezbe, novaKilaza);
     }
 }
 
-// Nova funkcija za proveru PR-a pri unosu u setu
 function proveriLicniRekordZaSet(nazivVezbe, novaKilaza) {
     const istorija = JSON.parse(localStorage.getItem('gymHistory')) || [];
     let maxKilaza = 0;
     
-    // Pronađi maksimalnu kilaže za ovu vežbu u istoriji
     istorija.forEach(sesija => {
         sesija.vezbe.forEach(v => {
             const naziv = v.naziv || v.ime || "";
@@ -320,20 +296,18 @@ function proveriLicniRekordZaSet(nazivVezbe, novaKilaza) {
         });
     });
     
-    // Takođe proveri trenutni trening (druge vežbe)
     const trenutneVezbe = JSON.parse(localStorage.getItem('gymUpData')) || [];
     trenutneVezbe.forEach(v => {
         const naziv = v.naziv || v.ime || "";
         if (naziv.toLowerCase() === nazivVezbe.toLowerCase() && v.setWeights) {
             const maxUTrenutnom = Math.max(...v.setWeights.filter(w => w > 0));
-            // Ne uzimaj u obzir trenutnu kilaže koju upravo postavljamo
+
             if (maxUTrenutnom > maxKilaza && maxUTrenutnom !== novaKilaza) {
                 maxKilaza = maxUTrenutnom;
             }
         }
     });
     
-    // Ako je nova kilaža veća od prethodnog maksimuma, to je PR!
     if (novaKilaza > maxKilaza) {
         const prBadge = document.createElement('div');
         prBadge.style.cssText = `
@@ -362,7 +336,6 @@ function proveriLicniRekordZaSet(nazivVezbe, novaKilaza) {
     }
 }
 
-// Nova funkcija za kopiranje kilaže iz prethodnog seta
 function copyPreviousWeight(exerciseIndex, setIndex) {
     const vezbe = JSON.parse(localStorage.getItem('gymUpData')) || [];
     
@@ -375,40 +348,32 @@ function copyPreviousWeight(exerciseIndex, setIndex) {
     
     localStorage.setItem('gymUpData', JSON.stringify(vezbe));
     
-    // Refresh prikaza
     prikaziVezbe();
     
     prikaziObavestenje(`Kopirano ${previousWeight}kg`, "📋");
 }
 
-// Nova funkcija za toggle serije
 function toggleSet(exerciseIndex, setIndex) {
     const vezbe = JSON.parse(localStorage.getItem('gymUpData')) || [];
     
     if (!vezbe[exerciseIndex]) return;
     
-    // Inicijalizuj progress ako ne postoji
     if (!vezbe[exerciseIndex].setProgress) {
         const brSerija = parseInt(vezbe[exerciseIndex].serije || vezbe[exerciseIndex].exSets || 0);
         vezbe[exerciseIndex].setProgress = Array(brSerija).fill(false);
     }
     
-    // Toggle seriju
     vezbe[exerciseIndex].setProgress[setIndex] = !vezbe[exerciseIndex].setProgress[setIndex];
     
-    // Sačuvaj
     localStorage.setItem('gymUpData', JSON.stringify(vezbe));
     
-    // Ažuriraj prikaz
     prikaziVezbe();
     
-    // Zvučni feedback (opciono)
     if (vezbe[exerciseIndex].setProgress[setIndex]) {
         prikaziObavestenje(`Serija ${setIndex + 1} završena! 💪`, "✅");
     }
 }
 
-// --- AI GENERATOR TRENINGA (Groq AI) ---
 
 async function generisiAITrening() {
     const user = auth.currentUser;
@@ -425,7 +390,6 @@ async function generisiAITrening() {
         return;
     }
 
-    // Provjeri premium
     if (!window.userIsPremium) {
         prikaziObavestenje('AI trening je Premium funkcija ⭐', '🔒');
         setTimeout(() => showPage('premium'), 800);
@@ -564,7 +528,6 @@ ODGOVORI ISKLJUČIVO U OVOM JSON FORMATU (bez objašnjenja, bez markdown, samo �
 
 }
 
-// --- BIOMETRIJA I AI KALKULATOR KALORIJA ---
 
 function sacuvajBiometriju() {
     const user = auth.currentUser;
@@ -604,9 +567,8 @@ function ucitajBiometriju(uid) {
             document.getElementById('user-goal').value = b.cilj || 'mišićna_masa';
             document.getElementById('user-location').value = b.lokacija || 'gym';
 
-            // AI Kalkulator kalorija (Harris-Benedict formula)
             const kalorijeBase = Math.round(10 * b.tezina + 6.25 * b.visina - 5 * b.godine + 5);
-            let ciljKalorija = kalorijeBase * 1.5; // Faktor aktivnosti
+            let ciljKalorija = kalorijeBase * 1.5; 
 
             if (b.cilj === "mišićna_masa") ciljKalorija += 400;
             if (b.cilj === "mrsavljenje") ciljKalorija -= 500;
@@ -620,7 +582,6 @@ function ucitajBiometriju(uid) {
                     profilDisplay.appendChild(aiBox);
                 }
                 
-                // Ikona na osnovu lokacije
                 let locationIcon = '🏋️';
                 let locationText = 'Teretana';
                 if (b.lokacija === 'home') {
@@ -644,7 +605,6 @@ function ucitajBiometriju(uid) {
     }).catch(err => console.error("Greška učitavanja:", err));
 }
 
-// --- FIREBASE AUTH ---
 
 auth.onAuthStateChanged((user) => {
     const loggedOutUI = document.getElementById('auth-logged-out');
@@ -662,7 +622,6 @@ auth.onAuthStateChanged((user) => {
         ucitajBiometriju(user.uid);
         ucitajPremiumStatus(user.uid);
 
-        // Sakrij lock odmah ako je vlasnik, inače prikaži dok se ne provjeri
         const lockIcon = document.getElementById('ai-trening-lock');
         if (lockIcon) lockIcon.style.display = (user.email === OWNER_EMAIL) ? 'none' : 'inline';
     } else {
@@ -707,12 +666,11 @@ function prijaviSe() {
 function odjaviSe() {
     auth.signOut().then(() => {
         prikaziObavestenje("Odjava uspešna", "👋");
-        // Ne brišemo gymUpData jer može biti lokalni trening
+
         setTimeout(() => location.reload(), 1000);
     });
 }
 
-// --- NEDELJNI PLAN ---
 
 function sacuvajPlan() {
     const dan = document.getElementById('planDay').value;
@@ -731,7 +689,7 @@ function sacuvajPlan() {
 
 function ucitajDanasniPlan() {
     const plan = JSON.parse(localStorage.getItem('weeklyPlan')) || {};
-    const danasnji = new Date().getDay(); // 0=Nedelja, 1=Ponedeljak...
+    const danasnji = new Date().getDay(); 
     
     const display = document.getElementById('today-plan-display');
     const fokusEl = document.getElementById('today-focus');
@@ -740,7 +698,6 @@ function ucitajDanasniPlan() {
         if(display) display.style.display = 'block';
         if(fokusEl) fokusEl.innerText = plan[danasnji];
         
-        // Dodaj dugme za AI generisanje
         const btnContainer = document.getElementById('generate-today-btn');
         if(btnContainer) {
             btnContainer.innerHTML = `
@@ -765,9 +722,8 @@ function ucitajDanasniPlan() {
     }
 }
 
-// Nova funkcija za generisanje treninga iz nedeljnog plana
 function generisiIzPlana(opisTreninga) {
-    // Proveri da li je korisnik ulogovan
+
     const user = auth.currentUser;
     if (!user) {
         prikaziObavestenje("Moraš biti ulogovan za AI funkcije! 🔒", "⚠️");
@@ -782,21 +738,17 @@ function generisiIzPlana(opisTreninga) {
         return;
     }
     
-    // Parsiraj opis (npr. "Grudi i Biceps", "Noge", "Leđa Ramena")
     const opis = opisTreninga.toLowerCase();
     
-    // Učitaj lokaciju i cilj
     let lokacija = document.getElementById('user-location')?.value || 'gym';
     let cilj = document.getElementById('user-goal')?.value || 'mišićna_masa';
     
-    // Fallback na localStorage
     const savedPrefs = JSON.parse(localStorage.getItem('userPreferences')) || {};
     if (!lokacija || lokacija === '') lokacija = savedPrefs.lokacija || 'gym';
     if (!cilj || cilj === '') cilj = savedPrefs.cilj || 'mišićna_masa';
     
     let preporuceneVezbe = [];
     
-    // Detektuj mišićne grupe
     const imaGrudi = opis.includes('grudi') || opis.includes('chest');
     const imaBiceps = opis.includes('biceps') || opis.includes('ruke');
     const imaTriceps = opis.includes('triceps') || opis.includes('ruke');
@@ -805,9 +757,8 @@ function generisiIzPlana(opisTreninga) {
     const imaNoge = opis.includes('noge') || opis.includes('legs') || opis.includes('kvadriceps') || opis.includes('but');
     const imaCore = opis.includes('trbuh') || opis.includes('core') || opis.includes('abs');
     
-    // 🏋️ TERETANA
     if (lokacija === 'gym') {
-        // GRUDI (4 vežbe)
+
         if (imaGrudi) {
             preporuceneVezbe.push(
                 { naziv: "Bench Press", kategorija: "Grudi", serije: 4, ponavljanja: 8, opis: "Ravna klupa", odmor: 90, weight: 60 },
@@ -817,7 +768,6 @@ function generisiIzPlana(opisTreninga) {
             );
         }
         
-        // BICEPS (4 vežbe)
         if (imaBiceps) {
             preporuceneVezbe.push(
                 { naziv: "Barbell Curl", kategorija: "Ruke", serije: 4, ponavljanja: 10, opis: "Šipka stojke", odmor: 60, weight: 25 },
@@ -827,7 +777,6 @@ function generisiIzPlana(opisTreninga) {
             );
         }
         
-        // TRICEPS (4 vežbe)
         if (imaTriceps) {
             preporuceneVezbe.push(
                 { naziv: "Close Grip Bench", kategorija: "Ruke", serije: 4, ponavljanja: 8, opis: "Uski hvat", odmor: 75, weight: 50 },
@@ -837,7 +786,6 @@ function generisiIzPlana(opisTreninga) {
             );
         }
         
-        // LEĐA (4 vežbe)
         if (imaLedja) {
             preporuceneVezbe.push(
                 { naziv: "Deadlift", kategorija: "Leđa", serije: 4, ponavljanja: 6, opis: "Kompound pokret", odmor: 120, weight: 100 },
@@ -847,7 +795,6 @@ function generisiIzPlana(opisTreninga) {
             );
         }
         
-        // RAMENA (4 vežbe)
         if (imaRamena) {
             preporuceneVezbe.push(
                 { naziv: "Military Press", kategorija: "Ramena", serije: 4, ponavljanja: 8, opis: "Šipka stojke", odmor: 90, weight: 40 },
@@ -857,7 +804,6 @@ function generisiIzPlana(opisTreninga) {
             );
         }
         
-        // NOGE (4 vežbe)
         if (imaNoge) {
             preporuceneVezbe.push(
                 { naziv: "Squat", kategorija: "Noge", serije: 4, ponavljanja: 10, opis: "Duboki čučanj", odmor: 120, weight: 80 },
@@ -867,7 +813,6 @@ function generisiIzPlana(opisTreninga) {
             );
         }
         
-        // CORE/TRBUH (4 vežbe)
         if (imaCore) {
             preporuceneVezbe.push(
                 { naziv: "Cable Crunches", kategorija: "Core", serije: 4, ponavljanja: 15, opis: "Kabel", odmor: 45, weight: 30 },
@@ -877,9 +822,9 @@ function generisiIzPlana(opisTreninga) {
             );
         }
     }
-    // 🏠🌳 KOD KUĆE / NAPOLJU
+
     else {
-        // GRUDI (4 vežbe)
+
         if (imaGrudi) {
             preporuceneVezbe.push(
                 { naziv: "Push-ups (Regular)", kategorija: "Grudi", serije: 4, ponavljanja: 15, opis: "Standardni sklekovi", odmor: 60, weight: 0 },
@@ -889,7 +834,6 @@ function generisiIzPlana(opisTreninga) {
             );
         }
         
-        // BICEPS (4 vežbe)
         if (imaBiceps) {
             preporuceneVezbe.push(
                 { naziv: "Chin-ups", kategorija: "Ruke", serije: 4, ponavljanja: 8, opis: "Supinirani hvat", odmor: 90, weight: 0 },
@@ -899,7 +843,6 @@ function generisiIzPlana(opisTreninga) {
             );
         }
         
-        // TRICEPS (4 vežbe)
         if (imaTriceps) {
             preporuceneVezbe.push(
                 { naziv: "Bench Dips", kategorija: "Ruke", serije: 4, ponavljanja: 15, opis: "Stolica/klupa", odmor: 60, weight: 0 },
@@ -909,7 +852,6 @@ function generisiIzPlana(opisTreninga) {
             );
         }
         
-        // LEĐA (4 vežbe)
         if (imaLedja) {
             preporuceneVezbe.push(
                 { naziv: "Pull-ups", kategorija: "Leđa", serije: 4, ponavljanja: 8, opis: "Široki hvat", odmor: 90, weight: 0 },
@@ -919,7 +861,6 @@ function generisiIzPlana(opisTreninga) {
             );
         }
         
-        // RAMENA (4 vežbe)
         if (imaRamena) {
             preporuceneVezbe.push(
                 { naziv: "Pike Push-ups", kategorija: "Ramena", serije: 4, ponavljanja: 12, opis: "Kukovi visoko", odmor: 75, weight: 0 },
@@ -929,7 +870,6 @@ function generisiIzPlana(opisTreninga) {
             );
         }
         
-        // NOGE (4 vežbe)
         if (imaNoge) {
             preporuceneVezbe.push(
                 { naziv: "Pistol Squats", kategorija: "Noge", serije: 4, ponavljanja: 8, opis: "Po nozi", odmor: 90, weight: 0 },
@@ -939,7 +879,6 @@ function generisiIzPlana(opisTreninga) {
             );
         }
         
-        // CORE/TRBUH (4 vežbe)
         if (imaCore) {
             preporuceneVezbe.push(
                 { naziv: "L-Sit Hold", kategorija: "Core", serije: 4, ponavljanja: "30s", opis: "Isometrija", odmor: 60, weight: 0 },
@@ -950,13 +889,11 @@ function generisiIzPlana(opisTreninga) {
         }
     }
     
-    // Ako nije detektovana ni jedna grupa, daj generalni trening
     if (preporuceneVezbe.length === 0) {
         prikaziObavestenje("Nisam prepoznao mišićne grupe. Koristim AI generator.", "⚠️");
         return generisiAITrening();
     }
     
-    // Dodaj kompatibilne polja
     preporuceneVezbe = preporuceneVezbe.map(v => ({
         ...v,
         ime: v.naziv,
@@ -975,7 +912,6 @@ function generisiIzPlana(opisTreninga) {
     showPage('workout');
 }
 
-// --- ARHIVIRANJE TRENINGA ---
 
 function arhivirajTrening() {
     const vezbe = JSON.parse(localStorage.getItem('gymUpData')) || [];
@@ -984,7 +920,6 @@ function arhivirajTrening() {
         return prikaziObavestenje("Nema vežbi za arhiviranje!", "⚠️");
     }
     
-    // Izračunaj trajanje sesije
     let trajanje = "0:00";
     if(sessionStartTime) {
         const diff = Date.now() - sessionStartTime;
@@ -993,7 +928,6 @@ function arhivirajTrening() {
         trajanje = `${mins}:${secs.toString().padStart(2, '0')}`;
     }
     
-    // Izračunaj statistiku završenih serija
     let ukupnoSerija = 0;
     let zavrsenoSerija = 0;
     
@@ -1006,10 +940,8 @@ function arhivirajTrening() {
         }
     });
     
-    // Učitaj istoriju
     let istorija = JSON.parse(localStorage.getItem('gymHistory')) || [];
     
-    // Dodaj novu sesiju
     const sesija = {
         datum: new Date().toISOString(),
         datumTekst: new Date().toLocaleDateString('sr-RS'),
@@ -1021,15 +953,12 @@ function arhivirajTrening() {
         procenatZavrsenosti: ukupnoSerija > 0 ? Math.round((zavrsenoSerija / ukupnoSerija) * 100) : 0
     };
     
-    istorija.unshift(sesija); // Dodaj na početak
+    istorija.unshift(sesija); 
     
-    // Sačuvaj
     localStorage.setItem('gymHistory', JSON.stringify(istorija));
     
-    // Obriši trenutni trening
     localStorage.removeItem('gymUpData');
     
-    // Zaustavi tajmer
     if(sessionInterval) {
         clearInterval(sessionInterval);
         sessionInterval = null;
@@ -1037,14 +966,11 @@ function arhivirajTrening() {
     checkCount = 0;
     sessionStartTime = null;
     
-    // Prikaz
     prikaziObavestenje(`Trening sačuvan! ${zavrsenoSerija}/${ukupnoSerija} serija završeno 🎉`, "💪");
     
-    // Ažuriraj prikaz
     prikaziVezbe();
     azurirajHomeStats();
     
-    // Vrati na home nakon 1.5s
     setTimeout(() => {
         showPage('home');
         const timerDisplay = document.getElementById('active-duration');
@@ -1052,7 +978,6 @@ function arhivirajTrening() {
     }, 1500);
 }
 
-// --- ISTORIJA TRENINGA ---
 
 function ucitajIstoriju() {
     const display = document.getElementById('history-display');
@@ -1155,7 +1080,6 @@ function prikaziDetalje(index) {
             const item = document.createElement('div');
             item.className = 'detail-item';
             
-            // Prikaži koji setovi su završeni sa kilažama
             let setDisplay = '';
             if (v.setProgress && Array.isArray(v.setProgress)) {
                 setDisplay = `<div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;">`;
@@ -1230,7 +1154,7 @@ function obrisiTrening(index) {
     const modal = document.getElementById('delete-modal');
     if(modal) modal.style.display = 'flex';
     
-    // Dinamički postavi onclick za confirm dugme
+
     const confirmBtn = document.getElementById('confirm-delete-btn');
     if(confirmBtn) {
         confirmBtn.onclick = () => potvrdiDelete();
@@ -1257,7 +1181,6 @@ function zatvoriDeleteModal() {
     deleteTargetIndex = null;
 }
 
-// --- AŽURIRANJE HOME STATISTIKA ---
 
 function azurirajHomeStats() {
     const vezbe = JSON.parse(localStorage.getItem('gymUpData')) || [];
@@ -1266,7 +1189,6 @@ function azurirajHomeStats() {
         countEl.innerText = vezbe.length;
     }
     
-    // Izračunaj ukupan broj završenih serija
     let ukupnoSerija = 0;
     let zavrsenoSerija = 0;
     
@@ -1279,7 +1201,6 @@ function azurirajHomeStats() {
         }
     });
     
-    // Ažuriraj prikaz ukupnog progresa
     const progressInfo = document.getElementById('total-progress-info');
     if (progressInfo && ukupnoSerija > 0) {
         const procenat = Math.round((zavrsenoSerija / ukupnoSerija) * 100);
@@ -1298,19 +1219,15 @@ function azurirajHomeStats() {
         progressInfo.innerHTML = '';
     }
     
-    // Ažuriraj današnje statistike na home stranici
     azurirajDanasnjeTreninge();
     
-    // Ažuriraj grafikon aktivnosti
     azurirajGrafikon();
 }
 
-// Nova funkcija za prikaz današnjih treninga
 function azurirajDanasnjeTreninge() {
     const istorija = JSON.parse(localStorage.getItem('gymHistory')) || [];
     const danas = new Date().toLocaleDateString('sr-RS');
     
-    // Filtriraj samo današnje treninge
     const danasnji = istorija.filter(sesija => sesija.datumTekst === danas);
     
     const countEl = document.getElementById('count-workouts');
@@ -1320,16 +1237,16 @@ function azurirajDanasnjeTreninge() {
     const setsEl = document.getElementById('total-sets-today');
     
     if (danasnji.length > 0) {
-        // Izračunaj ukupno vežbi danas
+
         let ukupnoVezbi = 0;
-        let ukupnoVreme = 0; // u sekundama
-        let ukupanVolumen = 0; // kg × ponavljanja
+        let ukupnoVreme = 0; 
+        let ukupanVolumen = 0; 
         let ukupnoSerija = 0;
         
         danasnji.forEach(sesija => {
             ukupnoVezbi += sesija.brojVezbi || 0;
             
-            // Parsiraj trajanje (format: "MM:SS")
+
             if (sesija.trajanje) {
                 const parts = sesija.trajanje.split(':');
                 if (parts.length === 2) {
@@ -1339,13 +1256,11 @@ function azurirajDanasnjeTreninge() {
                 }
             }
             
-            // Izračunaj volumen i serije
             if (sesija.vezbe && Array.isArray(sesija.vezbe)) {
                 sesija.vezbe.forEach(vezba => {
                     const reps = parseInt(vezba.ponavljanja || vezba.reps || 0);
                     const serije = parseInt(vezba.serije || 0);
                     
-                    // Saberi volumen za svaki završen set sa kilažom
                     if (vezba.setWeights && Array.isArray(vezba.setWeights)) {
                         vezba.setWeights.forEach((weight, idx) => {
                             if (vezba.setProgress && vezba.setProgress[idx]) {
@@ -1354,7 +1269,7 @@ function azurirajDanasnjeTreninge() {
                             }
                         });
                     } else if (vezba.weight) {
-                        // Stari format
+
                         const weight = parseFloat(vezba.weight) || 0;
                         ukupanVolumen += weight * reps * serije;
                         ukupnoSerija += serije;
@@ -1363,14 +1278,12 @@ function azurirajDanasnjeTreninge() {
             }
         });
         
-        // Prikaz
         if (countEl) countEl.innerText = ukupnoVezbi;
         if (durationEl) {
             const mins = Math.floor(ukupnoVreme / 60);
             durationEl.innerText = mins;
         }
         
-        // Prikaži summary karticu samo ako ima volumena
         if (summaryCard && (ukupanVolumen > 0 || ukupnoSerija > 0)) {
             summaryCard.style.display = 'block';
             if (volumeEl) volumeEl.innerText = Math.round(ukupanVolumen).toLocaleString('sr-RS');
@@ -1379,16 +1292,15 @@ function azurirajDanasnjeTreninge() {
             summaryCard.style.display = 'none';
         }
     } else {
-        // Ako nema treninga danas, prikaži 0
+
         if (countEl) countEl.innerText = '0';
         if (durationEl) durationEl.innerText = '0';
         if (summaryCard) summaryCard.style.display = 'none';
     }
     
-    // Ažuriraj prikaz današnjeg aktivnog treninga
     const trenutneVezbe = JSON.parse(localStorage.getItem('gymUpData')) || [];
     if (trenutneVezbe.length > 0) {
-        // Ima aktivni trening koji još nije sačuvan
+
         const ukupnoZavrsenih = danasnji.reduce((sum, s) => sum + (s.brojVezbi || 0), 0);
         if (countEl) {
             countEl.innerText = ukupnoZavrsenih + trenutneVezbe.length;
@@ -1399,25 +1311,22 @@ function azurirajDanasnjeTreninge() {
 function azurirajGrafikon() {
     const istorija = JSON.parse(localStorage.getItem('gymHistory')) || [];
     
-    // Reset svi stubići
     for(let i = 0; i <= 6; i++) {
         const bar = document.getElementById(`day-${i}`);
         if(bar) bar.style.height = '5%';
     }
     
-    // Izračunaj aktivnost po danima
     const aktivnost = {};
     istorija.forEach(sesija => {
         try {
             const datum = new Date(sesija.datum);
-            const dan = datum.getDay(); // 0=Ned, 1=Pon...
+            const dan = datum.getDay(); // 
             aktivnost[dan] = (aktivnost[dan] || 0) + sesija.brojVezbi;
         } catch(e) {
             console.error("Greška parsiranja datuma:", e);
         }
     });
     
-    // Postavi visine stubića (max 100%)
     const maxVezbe = Math.max(...Object.values(aktivnost), 1);
     
     Object.keys(aktivnost).forEach(dan => {
@@ -1429,7 +1338,6 @@ function azurirajGrafikon() {
     });
 }
 
-// --- ODMOR TAJMER ---
 
 function pokreniOdmor(sekunde, dugme) {
     if(!dugme.classList.contains('done')) {
@@ -1456,7 +1364,6 @@ function pokreniOdmor(sekunde, dugme) {
             zaustaviOdbrojavanje();
             document.getElementById('finish-popup').style.display = 'flex';
             
-            // Pusti zvuk ako postoji
             const zvuk = document.getElementById('finish-sound');
             if(zvuk) {
                 zvuk.play().catch(e => console.log("Audio play error:", e));
@@ -1476,7 +1383,6 @@ function zatvoriPopup() {
     if(popup) popup.style.display = 'none';
 }
 
-// --- RESET PLANA ---
 
 function resetujPlan() {
     if(confirm("Da li sigurno želiš da obrišeš trenutni plan vežbi?")) {
@@ -1485,7 +1391,7 @@ function resetujPlan() {
         azurirajHomeStats();
         prikaziObavestenje("Plan je obrisan", "🗑️");
         
-        // Resetuj tajmer
+
         if(sessionInterval) {
             clearInterval(sessionInterval);
             sessionInterval = null;
@@ -1498,7 +1404,6 @@ function resetujPlan() {
     }
 }
 
-// --- OBAVEŠTENJA ---
 
 function prikaziObavestenje(poruka, ikona = '✨') {
     const toast = document.createElement('div');
@@ -1514,9 +1419,6 @@ function prikaziObavestenje(poruka, ikona = '✨') {
     }, 3000);
 }
 
-// ============================================================
-// ============  MEAL PLAN - AI ISHRANA  ======================
-// ============================================================
 
 const DANI_NEDJELJE = ['Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota', 'Nedjelja'];
 
@@ -1542,18 +1444,15 @@ async function generisiMealPlan() {
     const brojObroka = parseInt(document.getElementById('meal-count').value);
     const alergije = document.getElementById('meal-allergies').value.trim();
 
-    // Validacija kalorija
     if (!kalorije || kalorije < 1000 || kalorije > 6000) {
         prikaziObavestenje('Unesi kalorije između 1000 i 6000!', '⚠️');
         return;
     }
 
-    // Pokazi loader
     document.getElementById('nutrition-form-section').style.display = 'none';
     document.getElementById('nutrition-result').style.display = 'none';
     document.getElementById('nutrition-loading').style.display = 'block';
 
-    // Mapiranje cilja
     const ciljTekst = {
         'mišićna_masa': 'izgradnja mišićne mase (bulk) — visok unos proteina i ugljenih hidrata',
         'mrsavljenje': 'mršavljenje i sagorijevanje masti (cut) — kalorijski deficit, visok protein, niska masnoća',
@@ -1627,12 +1526,10 @@ ODGOVORI ISKLJUČIVO U OVOM JSON FORMATU (bez objašnjenja, bez markdown, samo �
         const data = await response.json();
         let rawText = data.choices[0].message.content.trim();
 
-        // Čišćenje markdown backtick-ova ako AI doda
         rawText = rawText.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
 
         const planData = JSON.parse(rawText);
 
-        // Sačuvaj plan
         localStorage.setItem('mealPlan', JSON.stringify(planData));
 
         document.getElementById('nutrition-loading').style.display = 'none';
@@ -1672,7 +1569,6 @@ function prikaziMealPlan(planData) {
         'odrzavanje': 'Održavanje'
     };
 
-    // Izračunaj prosječne makroe
     let ukupnoProtein = 0, ukupnoUH = 0, ukupnoMasti = 0;
     if (planData.dani && planData.dani.length > 0) {
         planData.dani.forEach(d => {
@@ -1685,7 +1581,6 @@ function prikaziMealPlan(planData) {
         ukupnoMasti = Math.round(ukupnoMasti / planData.dani.length);
     }
 
-    // Summary sekcija
     const summaryEl = document.getElementById('nutrition-summary');
     summaryEl.innerHTML = `
         <div style="background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.05)); border: 1px solid #d4af37; border-radius: 20px; padding: 20px; margin-bottom: 20px;">
@@ -1711,7 +1606,6 @@ function prikaziMealPlan(planData) {
         </div>
     `;
 
-    // Dani
     const daniEl = document.getElementById('nutrition-days');
     daniEl.innerHTML = '';
 
@@ -1761,7 +1655,6 @@ function prikaziMealPlan(planData) {
 
         daniEl.appendChild(dayCard);
 
-        // Otvori prvi dan automatski
         if (idx === 0) {
             dayCard.classList.add('open');
         }
@@ -1783,30 +1676,25 @@ function resetujMealPlan() {
     prikaziObavestenje('Unesite nove podatke za novi plan', '🔄');
 }
 
-// ============================================================
-// ============  PREMIUM / PADDLE NAPLATA  ====================
-// ============================================================
 
 const OWNER_EMAIL = 'slavkovica40@gmail.com';
 
 let odabraniPlan = 'monthly';
 window.userIsPremium = false;
 
-// Provjeri da li je trenutni korisnik vlasnik
 function jeVlasnik() {
     const user = auth.currentUser;
     return user && user.email === OWNER_EMAIL;
 }
 
-// Inicijalizacija Paddle — poziva se kad se app učita
 function initPaddle() {
     if (typeof Paddle === 'undefined') {
         setTimeout(initPaddle, 500);
         return;
     }
-    Paddle.Environment.set("sandbox"); // ← PROMIJENI u "production" kad si spreman!
+    Paddle.Environment.set("sandbox"); 
     Paddle.Initialize({
-        token: "test_ca05e1dde6e10d3f35f9c9f8834", // ← client-side token iz Paddle dashboarda
+        token: "live_c40d588397a9d1cd596ac914233", 
         eventCallback: function(event) {
             if (event.name === "checkout.completed") {
                 onPlacanjeUspjesno(event.data);
@@ -1815,12 +1703,10 @@ function initPaddle() {
     });
 }
 
-// Pozovi init kad se stranica učita
 document.addEventListener('DOMContentLoaded', initPaddle);
 
-// Učitaj premium status iz Firestore (real-time listener)
 function ucitajPremiumStatus(uid) {
-    // Vlasnik uvijek ima premium
+
     if (jeVlasnik()) {
         window.userIsPremium = true;
         const badge = document.querySelector('.badge');
@@ -1840,11 +1726,11 @@ function ucitajPremiumStatus(uid) {
             const aktivan = isPremium && premiumDo && premiumDo > new Date();
             window.userIsPremium = aktivan;
 
-            // Prikaži/sakrij lock na AI trening dugmetu
+
             const lockIcon = document.getElementById('ai-trening-lock');
             if (lockIcon) lockIcon.style.display = aktivan ? 'none' : 'inline';
 
-            // Ažuriraj badge u headeru
+
             const badge = document.querySelector('.badge');
             if (badge) {
                 badge.textContent = aktivan ? '💎 PREMIUM' : 'FREE';
@@ -1854,7 +1740,6 @@ function ucitajPremiumStatus(uid) {
                 badge.style.color = aktivan ? '#000' : '#888';
             }
 
-            // Osvježi premium stranicu ako je otvorena
             const premiumPage = document.getElementById('premium');
             if (premiumPage && premiumPage.classList.contains('active')) {
                 ucitajPremiumStranicu();
@@ -1863,7 +1748,7 @@ function ucitajPremiumStatus(uid) {
     });
 }
 
-// Provjeri premium i izvrši callback
+
 function provjeriPremiumINapravi(akoPremium, akoNije) {
     if (window.userIsPremium) {
         akoPremium();
@@ -1872,7 +1757,7 @@ function provjeriPremiumINapravi(akoPremium, akoNije) {
     }
 }
 
-// Učitaj sadržaj premium stranice ovisno o statusu
+
 function ucitajPremiumStranicu() {
     const user = auth.currentUser;
     const elActive   = document.getElementById('premium-active');
@@ -1890,7 +1775,6 @@ function ucitajPremiumStranicu() {
 
     elLocked.style.display = 'none';
 
-    // Vlasnik vidi poseban ekran
     if (jeVlasnik()) {
         elActive.style.display   = 'block';
         elInactive.style.display = 'none';
@@ -1923,7 +1807,7 @@ function ucitajPremiumStranicu() {
     }
 }
 
-// Odabir plana — ažurira UI i dugme
+
 function odaberiPlan(plan) {
     odabraniPlan = plan;
 
@@ -1944,7 +1828,7 @@ function odaberiPlan(plan) {
     }
 }
 
-// Otvori Paddle Checkout overlay
+
 function kreniNaplatu() {
     const user = auth.currentUser;
     if (!user) {
@@ -1957,10 +1841,9 @@ function kreniNaplatu() {
         return;
     }
 
-    // Paddle Price ID-ovi — popuni nakon kreiranja proizvoda u Paddle Dashboardu
     const PRICE_IDS = {
-        monthly: 'pri_01khrba0c6g5zdkzhh7h5gdrks',  // npr. pri_01abc...
-        yearly:  'pri_01khrbdjjcxadg9e3ts8w5f13g'    // npr. pri_01def...
+        monthly: 'pro_01khnd4nq7w9xcw73kygz1edt5', 
+        yearly:  'pro_01khnd9fgq27t0e9sn5dms8p2v'   
     };
 
     const priceId = PRICE_IDS[odabraniPlan];
@@ -1980,20 +1863,17 @@ function kreniNaplatu() {
     });
 }
 
-// Callback kad je plaćanje uspješno
 async function onPlacanjeUspjesno(data) {
     const user = auth.currentUser;
     if (!user) return;
 
     const plan = odabraniPlan;
 
-    // Izračunaj datum isteka
     const sada = new Date();
     const premiumDo = plan === 'yearly'
         ? new Date(sada.setFullYear(sada.getFullYear() + 1))
         : new Date(sada.setMonth(sada.getMonth() + 1));
 
-    // Sačuvaj u Firestore
     await db.collection("korisnici").doc(user.uid).set({
         premium: true,
         premiumPlan: plan,
@@ -2011,7 +1891,6 @@ async function onPlacanjeUspjesno(data) {
     }, 2000);
 }
 
-// Otkaži pretplatu — preusmjeri na Paddle customer portal
 async function otkaziPretplatu() {
     if (!confirm('Sigurno želiš otkazati pretplatu? Ostaje aktivna do kraja perioda.')) return;
 
@@ -2022,13 +1901,12 @@ async function otkaziPretplatu() {
     const customerId = doc.exists ? doc.data().paddleCustomerId : null;
 
     if (customerId) {
-        // Otvori Paddle customer portal
+
         window.open(`https://customer.paddle.com/subscriptions`, '_blank');
     } else {
         prikaziObavestenje('Kontaktiraj nas za otkazivanje.', 'ℹ️');
     }
 
-    // Lokalno označi kao otkazano
     await db.collection("korisnici").doc(user.uid).set({
         premiumOtkazano: true
     }, { merge: true });
