@@ -1842,8 +1842,8 @@ function kreniNaplatu() {
     }
 
     const PRICE_IDS = {
-        monthly: 'pro_01khnd4nq7w9xcw73kygz1edt5', 
-        yearly:  'pro_01khnd9fgq27t0e9sn5dms8p2v'   
+        monthly: 'pri_01khnd7vkct9zh9fxxptx35v10', 
+        yearly:  'pri_01khnday1nw5hg06bf3nsa5txh'   
     };
 
     const priceId = PRICE_IDS[odabraniPlan];
